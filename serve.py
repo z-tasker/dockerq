@@ -223,6 +223,8 @@ def main() -> Optional[Starlette]:
     if sys.argv[1] == "--dev":
         uvicorn.run(app, host="127.0.0.1", port=8080, proxy_headers=True)
         return
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=8884, proxy_headers=True, ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"), ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"))
 
     return app
 
