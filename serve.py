@@ -33,6 +33,7 @@ async def home(request: Request) -> HTMLResponse:
 def canonicalize_name(name: str) -> str:
     return f"dockerq-{name}"
 
+
 @requires("authenticated")
 async def show(request: Request) -> JSONResponse:
     docker = aiodocker.Docker()
@@ -51,7 +52,9 @@ async def submit(request: Request) -> JSONResponse:
     tasks.add_task(docker.close)
 
     try:
-        existing_container = await docker.containers.get(canonicalize_name(body["name"]))
+        existing_container = await docker.containers.get(
+            canonicalize_name(body["name"])
+        )
         status = await existing_container.show()
         if not status["State"]["Running"]:
             request.app.state.log.debug(
@@ -88,9 +91,7 @@ async def submit(request: Request) -> JSONResponse:
                 "Env": [f"{key}={val}" for key, val in body["env"].items()]
                 if "env" in body
                 else None,
-                "HostConfig": {
-                    "ShmSize": 2000000000
-                }
+                "HostConfig": {"ShmSize": 2000000000},
             },
             name=canonicalize_name(body["name"]),
         )
@@ -121,10 +122,15 @@ async def status(request: Request) -> JSONResponse:
     tasks.add_task(docker.close)
 
     try:
-        container = await docker.containers.get(canonicalize_name(request.query_params["name"]))
+        container = await docker.containers.get(
+            canonicalize_name(request.query_params["name"])
+        )
         status = await container.show()
         return JSONResponse(
-            {"state": status["State"], "logs": await container.log(stdout=True, stderr=True)},
+            {
+                "state": status["State"],
+                "logs": await container.log(stdout=True, stderr=True),
+            },
             status_code=200,
             background=tasks,
         )
@@ -140,7 +146,9 @@ async def flush(request: Request) -> JSONResponse:
     tasks.add_task(docker.close)
 
     try:
-        container = await docker.containers.get(canonicalize_name(request.query_params["name"]))
+        container = await docker.containers.get(
+            canonicalize_name(request.query_params["name"])
+        )
         status = await container.show()
         if status["State"]["Running"]:
             return JSONResponse(
@@ -185,7 +193,6 @@ async def cleanup_stopped_containers() -> None:
                 log.debug("".join(logs))
             await container.delete()
 
-
     await docker.close()
 
 
@@ -205,6 +212,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     return parser
 
+
 def main() -> Optional[Starlette]:
     """Prepare Starlette Application and run in server event loop"""
 
@@ -218,7 +226,11 @@ def main() -> Optional[Starlette]:
         Route("/submit", submit, methods=["POST"]),
     ]
 
-    app = Starlette(middleware=get_middlewear(), routes=routes, on_startup=[start_background_processes])
+    app = Starlette(
+        middleware=get_middlewear(),
+        routes=routes,
+        on_startup=[start_background_processes],
+    )
     app.state.templates = Jinja2Templates(directory="templates")
     app.state.log = get_logger("app")
 
@@ -232,7 +244,16 @@ def main() -> Optional[Starlette]:
     if args.dev:
         uvicorn.run(app, host="127.0.0.1", port=8080, proxy_headers=True)
     else:
-        uvicorn.run(app, host="0.0.0.0", port=8884, proxy_headers=True, ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"), ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"), ssl_cert_reqs=ssl.CERT_REQUIRED)
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=8884,
+            proxy_headers=True,
+            ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"),
+            ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"),
+            ssl_ca_certs=os.getenv("DOCKERQ_SSL_CA_CERTS"),
+            ssl_cert_reqs=ssl.CERT_REQUIRED,
+        )
 
     return app
 

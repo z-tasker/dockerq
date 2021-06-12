@@ -23,7 +23,9 @@ def get_users_from_env() -> Dict[str, str]:
     users = dict()
     for name, value in os.environ.items():
         if name.startswith("DOCKERQ_USER_") and name.endswith("_PASSWORD"):
-            users[name.replace("DOCKERQ_USER_", "").replace("_PASSWORD", "").lower()] = value
+            users[
+                name.replace("DOCKERQ_USER_", "").replace("_PASSWORD", "").lower()
+            ] = value
     return users
 
 
