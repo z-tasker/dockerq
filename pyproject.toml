@@ -5,7 +5,7 @@ description = ""
 authors = ["tmgrask <t.mackersy@psiphon.ca>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 aiodocker = "^0.19.1"
 uvicorn = "^0.14.0"
 starlette = "^0.14.2"
