@@ -1,0 +1,12 @@
+[Unit]
+Description=DockerQ server
+
+[Service]
+WorkingDirectory=/home/admin/dockerq
+ExecStart=/home/admin/.poetry/bin/poetry run /home/admin/dockerq/serve.py
+EnvironmentFile=/home/admin/dockerq/.env
+Restart=on-failure
+User=admin
+
+[Install]
+WantedBy=default.target
