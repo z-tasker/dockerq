@@ -16,7 +16,6 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route, Mount
-from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from middlewear import get_middlewear
@@ -197,8 +196,17 @@ async def start_background_processes() -> None:
     log.info(scheduler.get_jobs())
 
 
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--dev", action="store_true")
+
+    return parser
+
 def main() -> Optional[Starlette]:
     """Prepare Starlette Application and run in server event loop"""
+
+    args = get_parser().parse_args()
 
     routes = [
         Route("/", home),
@@ -206,7 +214,6 @@ def main() -> Optional[Starlette]:
         Route("/status", status),
         Route("/flush", flush),
         Route("/submit", submit, methods=["POST"]),
-        Mount("/static", StaticFiles(directory="static")),
     ]
 
     app = Starlette(middleware=get_middlewear(), routes=routes, on_startup=[start_background_processes])
@@ -220,11 +227,10 @@ def main() -> Optional[Starlette]:
     # app.state.elasticsearch_client = elasticsearch_client
     # app.state.s3_client = s3_client
 
-    if sys.argv[1] == "--dev":
+    if args.dev:
         uvicorn.run(app, host="127.0.0.1", port=8080, proxy_headers=True)
-        return
     else:
-        uvicorn.run(app, host="0.0.0.0", port=8884, proxy_headers=True, ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"), ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"))
+        uvicorn.run(app, host="0.0.0.0", port=8884, proxy_headers=True, ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"), ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"), ssl_cert_reqs=True)
 
     return app
 
