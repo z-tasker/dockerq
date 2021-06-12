@@ -5,6 +5,7 @@ import os
 import sys
 import json
 import logging
+import ssl
 from pathlib import Path
 
 import aiodocker
@@ -231,7 +232,7 @@ def main() -> Optional[Starlette]:
     if args.dev:
         uvicorn.run(app, host="127.0.0.1", port=8080, proxy_headers=True)
     else:
-        uvicorn.run(app, host="0.0.0.0", port=8884, proxy_headers=True, ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"), ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"), ssl_cert_reqs=True)
+        uvicorn.run(app, host="0.0.0.0", port=8884, proxy_headers=True, ssl_keyfile=os.getenv("DOCKERQ_SSL_KEYFILE"), ssl_certfile=os.getenv("DOCKERQ_SSL_CERTFILE"), ssl_cert_reqs=ssl.CERTS_REQUIRED)
 
     return app
 
