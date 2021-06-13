@@ -23,7 +23,7 @@ from starlette.templating import Jinja2Templates
 from middlewear import get_middlewear
 from log import get_logger
 
-MAX_DOCKER_CONCURRENCY = os.getenv("DOCKERQ_MAX_CONCURRENCY", 2)
+MAX_DOCKER_CONCURRENCY = int(os.getenv("DOCKERQ_MAX_CONCURRENCY", 2))
 
 
 async def home(request: Request) -> HTMLResponse:
